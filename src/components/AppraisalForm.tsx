@@ -5,30 +5,55 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Slider } from "@/components/ui/slider";
 
-export interface AppraisalData {
-  itemName: string;
-  category: string;
-  condition: string;
-  age: number;
-  originalValue: number;
-  marketComparables: number;
-  description: string;
+export interface StaffAppraisalData {
+  employeeName: string;
+  position: string;
+  department: string;
+  reviewPeriod: string;
+  directSupervisor: string;
+  
+  // KPI Ratings (1-5 scale)
+  productivity: number;
+  quality: number;
+  communication: number;
+  teamwork: number;
+  initiative: number;
+  reliability: number;
+  
+  // Goals and Achievements
+  goalsAchieved: number;
+  totalGoals: number;
+  
+  // Additional feedback
+  strengths: string;
+  areasForImprovement: string;
+  additionalComments: string;
 }
 
-interface AppraisalFormProps {
-  onSubmit: (data: AppraisalData) => void;
+interface StaffAppraisalFormProps {
+  onSubmit: (data: StaffAppraisalData) => void;
 }
 
-export const AppraisalForm = ({ onSubmit }: AppraisalFormProps) => {
-  const [formData, setFormData] = useState<AppraisalData>({
-    itemName: "",
-    category: "",
-    condition: "",
-    age: 0,
-    originalValue: 0,
-    marketComparables: 0,
-    description: "",
+export const StaffAppraisalForm = ({ onSubmit }: StaffAppraisalFormProps) => {
+  const [formData, setFormData] = useState<StaffAppraisalData>({
+    employeeName: "",
+    position: "",
+    department: "",
+    reviewPeriod: "",
+    directSupervisor: "",
+    productivity: 3,
+    quality: 3,
+    communication: 3,
+    teamwork: 3,
+    initiative: 3,
+    reliability: 3,
+    goalsAchieved: 0,
+    totalGoals: 0,
+    strengths: "",
+    areasForImprovement: "",
+    additionalComments: "",
   });
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -36,118 +61,207 @@ export const AppraisalForm = ({ onSubmit }: AppraisalFormProps) => {
     onSubmit(formData);
   };
 
-  const updateField = (field: keyof AppraisalData, value: string | number) => {
+  const updateField = (field: keyof StaffAppraisalData, value: string | number) => {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
+  const updateRating = (field: keyof StaffAppraisalData, value: number[]) => {
+    setFormData(prev => ({ ...prev, [field]: value[0] }));
+  };
+
+  const getRatingLabel = (rating: number) => {
+    const labels = ["", "Poor", "Below Average", "Average", "Good", "Excellent"];
+    return labels[rating] || "";
+  };
+
   return (
-    <Card className="w-full max-w-2xl mx-auto">
+    <Card className="w-full max-w-4xl mx-auto">
       <CardHeader>
-        <CardTitle className="text-2xl font-bold text-center">Item Appraisal</CardTitle>
+        <CardTitle className="text-2xl font-bold text-center">Staff Performance Appraisal</CardTitle>
       </CardHeader>
       <CardContent>
-        <form onSubmit={handleSubmit} className="space-y-6">
-          <div className="grid gap-4 md:grid-cols-2">
-            <div className="space-y-2">
-              <Label htmlFor="itemName">Item Name *</Label>
-              <Input
-                id="itemName"
-                value={formData.itemName}
-                onChange={(e) => updateField("itemName", e.target.value)}
-                placeholder="Enter item name"
-                required
-              />
-            </div>
+        <form onSubmit={handleSubmit} className="space-y-8">
+          {/* Employee Information */}
+          <div className="space-y-4">
+            <h3 className="text-lg font-semibold">Employee Information</h3>
+            <div className="grid gap-4 md:grid-cols-2">
+              <div className="space-y-2">
+                <Label htmlFor="employeeName">Employee Name *</Label>
+                <Input
+                  id="employeeName"
+                  value={formData.employeeName}
+                  onChange={(e) => updateField("employeeName", e.target.value)}
+                  placeholder="Enter employee name"
+                  required
+                />
+              </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="category">Category *</Label>
-              <Select value={formData.category} onValueChange={(value) => updateField("category", value)}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select category" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="electronics">Electronics</SelectItem>
-                  <SelectItem value="furniture">Furniture</SelectItem>
-                  <SelectItem value="vehicles">Vehicles</SelectItem>
-                  <SelectItem value="jewelry">Jewelry</SelectItem>
-                  <SelectItem value="equipment">Equipment</SelectItem>
-                  <SelectItem value="art">Art & Collectibles</SelectItem>
-                  <SelectItem value="other">Other</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
+              <div className="space-y-2">
+                <Label htmlFor="position">Position *</Label>
+                <Input
+                  id="position"
+                  value={formData.position}
+                  onChange={(e) => updateField("position", e.target.value)}
+                  placeholder="Enter job position"
+                  required
+                />
+              </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="condition">Condition *</Label>
-              <Select value={formData.condition} onValueChange={(value) => updateField("condition", value)}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select condition" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="excellent">Excellent</SelectItem>
-                  <SelectItem value="good">Good</SelectItem>
-                  <SelectItem value="fair">Fair</SelectItem>
-                  <SelectItem value="poor">Poor</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
+              <div className="space-y-2">
+                <Label htmlFor="department">Department *</Label>
+                <Select value={formData.department} onValueChange={(value) => updateField("department", value)}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select department" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="sales">Sales</SelectItem>
+                    <SelectItem value="marketing">Marketing</SelectItem>
+                    <SelectItem value="operations">Operations</SelectItem>
+                    <SelectItem value="finance">Finance</SelectItem>
+                    <SelectItem value="hr">Human Resources</SelectItem>
+                    <SelectItem value="it">IT</SelectItem>
+                    <SelectItem value="customer-service">Customer Service</SelectItem>
+                    <SelectItem value="other">Other</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="age">Age (years)</Label>
-              <Input
-                id="age"
-                type="number"
-                value={formData.age}
-                onChange={(e) => updateField("age", Number(e.target.value))}
-                placeholder="0"
-                min="0"
-              />
-            </div>
+              <div className="space-y-2">
+                <Label htmlFor="reviewPeriod">Review Period *</Label>
+                <Select value={formData.reviewPeriod} onValueChange={(value) => updateField("reviewPeriod", value)}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select review period" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="q1">Q1 2024</SelectItem>
+                    <SelectItem value="q2">Q2 2024</SelectItem>
+                    <SelectItem value="q3">Q3 2024</SelectItem>
+                    <SelectItem value="q4">Q4 2024</SelectItem>
+                    <SelectItem value="annual">Annual 2024</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="originalValue">Original Purchase Value ($)</Label>
-              <Input
-                id="originalValue"
-                type="number"
-                value={formData.originalValue}
-                onChange={(e) => updateField("originalValue", Number(e.target.value))}
-                placeholder="0"
-                min="0"
-                step="0.01"
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="marketComparables">Market Comparable ($)</Label>
-              <Input
-                id="marketComparables"
-                type="number"
-                value={formData.marketComparables}
-                onChange={(e) => updateField("marketComparables", Number(e.target.value))}
-                placeholder="0"
-                min="0"
-                step="0.01"
-              />
+              <div className="space-y-2 md:col-span-2">
+                <Label htmlFor="directSupervisor">Direct Supervisor</Label>
+                <Input
+                  id="directSupervisor"
+                  value={formData.directSupervisor}
+                  onChange={(e) => updateField("directSupervisor", e.target.value)}
+                  placeholder="Enter supervisor name"
+                />
+              </div>
             </div>
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="description">Description</Label>
-            <Textarea
-              id="description"
-              value={formData.description}
-              onChange={(e) => updateField("description", e.target.value)}
-              placeholder="Additional details about the item..."
-              rows={3}
-            />
+          {/* KPI Ratings */}
+          <div className="space-y-4">
+            <h3 className="text-lg font-semibold">Key Performance Indicators</h3>
+            <p className="text-sm text-muted-foreground">Rate each area from 1 (Poor) to 5 (Excellent)</p>
+            
+            <div className="grid gap-6 md:grid-cols-2">
+              {[
+                { key: 'productivity', label: 'Productivity & Output' },
+                { key: 'quality', label: 'Quality of Work' },
+                { key: 'communication', label: 'Communication Skills' },
+                { key: 'teamwork', label: 'Teamwork & Collaboration' },
+                { key: 'initiative', label: 'Initiative & Innovation' },
+                { key: 'reliability', label: 'Reliability & Attendance' }
+              ].map(({ key, label }) => (
+                <div key={key} className="space-y-3">
+                  <div className="flex justify-between">
+                    <Label>{label}</Label>
+                    <span className="text-sm font-medium">
+                      {formData[key as keyof StaffAppraisalData]} - {getRatingLabel(formData[key as keyof StaffAppraisalData] as number)}
+                    </span>
+                  </div>
+                  <Slider
+                    value={[formData[key as keyof StaffAppraisalData] as number]}
+                    onValueChange={(value) => updateRating(key as keyof StaffAppraisalData, value)}
+                    max={5}
+                    min={1}
+                    step={1}
+                    className="w-full"
+                  />
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Goals Achievement */}
+          <div className="space-y-4">
+            <h3 className="text-lg font-semibold">Goals Achievement</h3>
+            <div className="grid gap-4 md:grid-cols-2">
+              <div className="space-y-2">
+                <Label htmlFor="goalsAchieved">Goals Achieved</Label>
+                <Input
+                  id="goalsAchieved"
+                  type="number"
+                  value={formData.goalsAchieved}
+                  onChange={(e) => updateField("goalsAchieved", Number(e.target.value))}
+                  placeholder="0"
+                  min="0"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="totalGoals">Total Goals Set</Label>
+                <Input
+                  id="totalGoals"
+                  type="number"
+                  value={formData.totalGoals}
+                  onChange={(e) => updateField("totalGoals", Number(e.target.value))}
+                  placeholder="0"
+                  min="0"
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Feedback Section */}
+          <div className="space-y-4">
+            <h3 className="text-lg font-semibold">Additional Feedback</h3>
+            
+            <div className="space-y-2">
+              <Label htmlFor="strengths">Key Strengths</Label>
+              <Textarea
+                id="strengths"
+                value={formData.strengths}
+                onChange={(e) => updateField("strengths", e.target.value)}
+                placeholder="Highlight the employee's main strengths..."
+                rows={3}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="areasForImprovement">Areas for Improvement</Label>
+              <Textarea
+                id="areasForImprovement"
+                value={formData.areasForImprovement}
+                onChange={(e) => updateField("areasForImprovement", e.target.value)}
+                placeholder="Identify areas where the employee can improve..."
+                rows={3}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="additionalComments">Additional Comments</Label>
+              <Textarea
+                id="additionalComments"
+                value={formData.additionalComments}
+                onChange={(e) => updateField("additionalComments", e.target.value)}
+                placeholder="Any other feedback or comments..."
+                rows={3}
+              />
+            </div>
           </div>
 
           <Button 
             type="submit" 
             className="w-full"
-            disabled={!formData.itemName || !formData.category || !formData.condition}
+            disabled={!formData.employeeName || !formData.position || !formData.department || !formData.reviewPeriod}
           >
-            Calculate Appraisal
+            Generate Performance Report
           </Button>
         </form>
       </CardContent>

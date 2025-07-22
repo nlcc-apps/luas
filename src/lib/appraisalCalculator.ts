@@ -1,66 +1,98 @@
-import { AppraisalData } from "@/components/AppraisalForm";
-import { AppraisalResult } from "@/components/AppraisalResult";
+import { StaffAppraisalData } from "@/components/AppraisalForm";
+import { StaffAppraisalResult } from "@/components/AppraisalResult";
 
-export const calculateAppraisal = (data: AppraisalData): AppraisalResult => {
-  // Base value calculation
-  let baseValue = Math.max(data.originalValue, data.marketComparables);
-  if (baseValue === 0) {
-    baseValue = data.marketComparables || 1000; // Fallback estimate
-  }
-
-  // Age depreciation (varies by category)
-  const depreciationRates = {
-    electronics: 0.2, // 20% per year
-    vehicles: 0.15,   // 15% per year
-    furniture: 0.1,   // 10% per year
-    jewelry: 0.02,    // 2% per year
-    equipment: 0.12,  // 12% per year
-    art: -0.05,       // Can appreciate
-    other: 0.1        // 10% per year
-  };
-
-  const depreciationRate = depreciationRates[data.category as keyof typeof depreciationRates] || 0.1;
-  const depreciationFactor = Math.max(0, 1 - (depreciationRate * data.age));
-
-  // Condition adjustments
-  const conditionMultipliers = {
-    excellent: 1.1,   // +10%
-    good: 1.0,        // No adjustment
-    fair: 0.8,        // -20%
-    poor: 0.6         // -40%
-  };
-
-  const conditionMultiplier = conditionMultipliers[data.condition as keyof typeof conditionMultipliers] || 1.0;
-  const conditionAdjustment = conditionMultiplier - 1;
-
-  // Market adjustment based on comparables vs original value
-  let marketAdjustment = 0;
-  if (data.marketComparables > 0 && data.originalValue > 0) {
-    const marketRatio = data.marketComparables / data.originalValue;
-    marketAdjustment = Math.min(Math.max(marketRatio - 1, -0.5), 0.5); // Cap at ±50%
-  }
-
-  // Calculate final value
-  const estimatedValue = Math.round(
-    baseValue * depreciationFactor * conditionMultiplier * (1 + marketAdjustment)
-  );
-
-  // Determine confidence level
-  let confidence: "Low" | "Medium" | "High" = "Medium";
+export const calculateStaffAppraisal = (data: StaffAppraisalData): StaffAppraisalResult => {
+  // Calculate KPI average (out of 5)
+  const kpiScores = [
+    data.productivity,
+    data.quality,
+    data.communication,
+    data.teamwork,
+    data.initiative,
+    data.reliability
+  ];
   
-  if (data.originalValue > 0 && data.marketComparables > 0) {
-    confidence = "High";
-  } else if (data.originalValue > 0 || data.marketComparables > 0) {
-    confidence = "Medium";
-  } else {
-    confidence = "Low";
+  const kpiAverage = kpiScores.reduce((sum, score) => sum + score, 0) / kpiScores.length;
+  
+  // Calculate goal completion rate
+  const goalCompletionRate = data.totalGoals > 0 
+    ? (data.goalsAchieved / data.totalGoals) * 100 
+    : 0;
+  
+  // Calculate overall score (70% KPI, 30% Goals)
+  const kpiPercentage = (kpiAverage / 5) * 100;
+  const overallScore = Math.round((kpiPercentage * 0.7) + (goalCompletionRate * 0.3));
+  
+  // Determine grade
+  let overallGrade: string;
+  if (overallScore >= 95) overallGrade = "A+";
+  else if (overallScore >= 90) overallGrade = "A";
+  else if (overallScore >= 85) overallGrade = "B+";
+  else if (overallScore >= 80) overallGrade = "B";
+  else if (overallScore >= 75) overallGrade = "C+";
+  else if (overallScore >= 70) overallGrade = "C";
+  else if (overallScore >= 65) overallGrade = "D+";
+  else if (overallScore >= 60) overallGrade = "D";
+  else overallGrade = "F";
+  
+  // Determine performance level
+  let performanceLevel: StaffAppraisalResult["performanceLevel"];
+  if (overallScore >= 90) performanceLevel = "Outstanding";
+  else if (overallScore >= 80) performanceLevel = "Exceeds Expectations";
+  else if (overallScore >= 70) performanceLevel = "Meets Expectations";
+  else if (overallScore >= 60) performanceLevel = "Below Expectations";
+  else performanceLevel = "Unsatisfactory";
+  
+  // Generate recommendations
+  const recommendations: string[] = [];
+  
+  // KPI-based recommendations
+  if (data.productivity < 3) {
+    recommendations.push("Focus on improving productivity through better time management and goal setting.");
   }
-
+  if (data.quality < 3) {
+    recommendations.push("Work on attention to detail and quality assurance processes.");
+  }
+  if (data.communication < 3) {
+    recommendations.push("Enhance communication skills through training or practice opportunities.");
+  }
+  if (data.teamwork < 3) {
+    recommendations.push("Participate more actively in team activities and collaborative projects.");
+  }
+  if (data.initiative < 3) {
+    recommendations.push("Take more initiative by proposing new ideas and solutions.");
+  }
+  if (data.reliability < 3) {
+    recommendations.push("Improve reliability by maintaining consistent attendance and meeting deadlines.");
+  }
+  
+  // Goal-based recommendations
+  if (goalCompletionRate < 70) {
+    recommendations.push("Work with supervisor to set more achievable goals and create action plans.");
+  }
+  
+  // Overall performance recommendations
+  if (overallScore >= 90) {
+    recommendations.push("Continue excellent performance and consider mentoring others.");
+    recommendations.push("Explore opportunities for additional responsibilities or leadership roles.");
+  } else if (overallScore >= 80) {
+    recommendations.push("Maintain strong performance and identify areas for further growth.");
+  } else if (overallScore < 70) {
+    recommendations.push("Schedule regular check-ins with supervisor to track improvement progress.");
+    recommendations.push("Consider additional training or support resources.");
+  }
+  
+  // Ensure at least one recommendation
+  if (recommendations.length === 0) {
+    recommendations.push("Continue current performance level and seek opportunities for professional development.");
+  }
+  
   return {
-    estimatedValue,
-    depreciationFactor: 1 - depreciationFactor,
-    conditionAdjustment,
-    marketAdjustment,
-    confidence
+    overallScore,
+    overallGrade,
+    kpiAverage,
+    goalCompletionRate,
+    performanceLevel,
+    recommendations
   };
 };

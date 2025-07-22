@@ -1,93 +1,125 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
+import { Progress } from "@/components/ui/progress";
 
-export interface AppraisalResult {
-  estimatedValue: number;
-  depreciationFactor: number;
-  conditionAdjustment: number;
-  marketAdjustment: number;
-  confidence: "Low" | "Medium" | "High";
+export interface StaffAppraisalResult {
+  overallScore: number;
+  overallGrade: string;
+  kpiAverage: number;
+  goalCompletionRate: number;
+  performanceLevel: "Outstanding" | "Exceeds Expectations" | "Meets Expectations" | "Below Expectations" | "Unsatisfactory";
+  recommendations: string[];
 }
 
-interface AppraisalResultProps {
-  result: AppraisalResult;
-  itemName: string;
+interface StaffAppraisalResultProps {
+  result: StaffAppraisalResult;
+  employeeName: string;
+  position: string;
+  reviewPeriod: string;
 }
 
-export const AppraisalResultComponent = ({ result, itemName }: AppraisalResultProps) => {
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-    }).format(amount);
-  };
-
-  const getConfidenceColor = (confidence: string) => {
-    switch (confidence) {
-      case "High":
+export const StaffAppraisalResultComponent = ({ result, employeeName, position, reviewPeriod }: StaffAppraisalResultProps) => {
+  const getPerformanceColor = (level: string) => {
+    switch (level) {
+      case "Outstanding":
         return "bg-green-100 text-green-800 border-green-200";
-      case "Medium":
+      case "Exceeds Expectations":
+        return "bg-blue-100 text-blue-800 border-blue-200";
+      case "Meets Expectations":
         return "bg-yellow-100 text-yellow-800 border-yellow-200";
-      case "Low":
+      case "Below Expectations":
+        return "bg-orange-100 text-orange-800 border-orange-200";
+      case "Unsatisfactory":
         return "bg-red-100 text-red-800 border-red-200";
       default:
         return "bg-gray-100 text-gray-800 border-gray-200";
     }
   };
 
+  const getScoreColor = (score: number) => {
+    if (score >= 90) return "text-green-600";
+    if (score >= 80) return "text-blue-600";
+    if (score >= 70) return "text-yellow-600";
+    if (score >= 60) return "text-orange-600";
+    return "text-red-600";
+  };
+
   return (
-    <Card className="w-full max-w-2xl mx-auto">
+    <Card className="w-full max-w-4xl mx-auto">
       <CardHeader>
         <CardTitle className="text-2xl font-bold text-center">
-          Appraisal Result
+          Performance Appraisal Report
         </CardTitle>
-        <p className="text-center text-muted-foreground">{itemName}</p>
+        <div className="text-center space-y-1">
+          <p className="text-lg font-medium">{employeeName}</p>
+          <p className="text-muted-foreground">{position} • {reviewPeriod}</p>
+        </div>
       </CardHeader>
       <CardContent className="space-y-6">
+        {/* Overall Score */}
         <div className="text-center">
-          <div className="text-4xl font-bold text-primary mb-2">
-            {formatCurrency(result.estimatedValue)}
+          <div className={`text-6xl font-bold mb-2 ${getScoreColor(result.overallScore)}`}>
+            {result.overallScore}%
           </div>
-          <Badge className={getConfidenceColor(result.confidence)}>
-            {result.confidence} Confidence
+          <div className="text-2xl font-semibold mb-2">Grade: {result.overallGrade}</div>
+          <Badge className={getPerformanceColor(result.performanceLevel)}>
+            {result.performanceLevel}
           </Badge>
         </div>
 
         <Separator />
 
+        {/* Performance Metrics */}
         <div className="space-y-4">
-          <h3 className="text-lg font-semibold">Calculation Breakdown</h3>
+          <h3 className="text-lg font-semibold">Performance Breakdown</h3>
           
-          <div className="grid gap-3">
-            <div className="flex justify-between items-center p-3 bg-muted rounded-lg">
-              <span className="font-medium">Depreciation Factor</span>
-              <span className="text-sm text-muted-foreground">
-                {(result.depreciationFactor * 100).toFixed(1)}%
-              </span>
+          <div className="grid gap-4 md:grid-cols-2">
+            <div className="space-y-2">
+              <div className="flex justify-between items-center">
+                <span className="font-medium">KPI Average</span>
+                <span className="text-sm font-semibold">{result.kpiAverage.toFixed(1)}/5.0</span>
+              </div>
+              <Progress value={(result.kpiAverage / 5) * 100} className="h-2" />
             </div>
 
-            <div className="flex justify-between items-center p-3 bg-muted rounded-lg">
-              <span className="font-medium">Condition Adjustment</span>
-              <span className="text-sm text-muted-foreground">
-                {result.conditionAdjustment > 0 ? '+' : ''}{(result.conditionAdjustment * 100).toFixed(1)}%
-              </span>
-            </div>
-
-            <div className="flex justify-between items-center p-3 bg-muted rounded-lg">
-              <span className="font-medium">Market Adjustment</span>
-              <span className="text-sm text-muted-foreground">
-                {result.marketAdjustment > 0 ? '+' : ''}{(result.marketAdjustment * 100).toFixed(1)}%
-              </span>
+            <div className="space-y-2">
+              <div className="flex justify-between items-center">
+                <span className="font-medium">Goal Completion</span>
+                <span className="text-sm font-semibold">{result.goalCompletionRate.toFixed(0)}%</span>
+              </div>
+              <Progress value={result.goalCompletionRate} className="h-2" />
             </div>
           </div>
         </div>
 
+        <Separator />
+
+        {/* Recommendations */}
+        <div className="space-y-4">
+          <h3 className="text-lg font-semibold">Recommendations & Next Steps</h3>
+          <div className="space-y-2">
+            {result.recommendations.map((recommendation, index) => (
+              <div key={index} className="flex items-start gap-2 p-3 bg-muted rounded-lg">
+                <span className="flex-shrink-0 w-6 h-6 bg-primary text-primary-foreground rounded-full text-xs flex items-center justify-center font-semibold">
+                  {index + 1}
+                </span>
+                <p className="text-sm">{recommendation}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Performance Scale Reference */}
         <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
-          <p className="text-sm text-blue-800">
-            <strong>Disclaimer:</strong> This is an estimated appraisal based on provided information. 
-            For official valuations, please consult a certified appraiser.
-          </p>
+          <h4 className="font-semibold text-blue-800 mb-2">Performance Scale Reference</h4>
+          <div className="text-xs text-blue-700 space-y-1">
+            <p><strong>90-100%:</strong> Outstanding - Consistently exceeds all expectations</p>
+            <p><strong>80-89%:</strong> Exceeds Expectations - Regularly surpasses requirements</p>
+            <p><strong>70-79%:</strong> Meets Expectations - Satisfactory performance</p>
+            <p><strong>60-69%:</strong> Below Expectations - Improvement needed</p>
+            <p><strong>Below 60%:</strong> Unsatisfactory - Significant improvement required</p>
+          </div>
         </div>
       </CardContent>
     </Card>

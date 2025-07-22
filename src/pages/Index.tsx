@@ -1,22 +1,30 @@
 import { useState } from "react";
-import { AppraisalForm, AppraisalData } from "@/components/AppraisalForm";
-import { AppraisalResultComponent, AppraisalResult } from "@/components/AppraisalResult";
-import { calculateAppraisal } from "@/lib/appraisalCalculator";
+import { StaffAppraisalForm, StaffAppraisalData } from "@/components/AppraisalForm";
+import { StaffAppraisalResultComponent, StaffAppraisalResult } from "@/components/AppraisalResult";
+import { calculateStaffAppraisal } from "@/lib/appraisalCalculator";
 import { Button } from "@/components/ui/button";
 
 const Index = () => {
-  const [appraisalResult, setAppraisalResult] = useState<AppraisalResult | null>(null);
-  const [currentItem, setCurrentItem] = useState<string>("");
+  const [appraisalResult, setAppraisalResult] = useState<StaffAppraisalResult | null>(null);
+  const [currentEmployee, setCurrentEmployee] = useState<{
+    name: string;
+    position: string;
+    reviewPeriod: string;
+  } | null>(null);
 
-  const handleAppraisalSubmit = (data: AppraisalData) => {
-    const result = calculateAppraisal(data);
+  const handleAppraisalSubmit = (data: StaffAppraisalData) => {
+    const result = calculateStaffAppraisal(data);
     setAppraisalResult(result);
-    setCurrentItem(data.itemName);
+    setCurrentEmployee({
+      name: data.employeeName,
+      position: data.position,
+      reviewPeriod: data.reviewPeriod
+    });
   };
 
   const resetAppraisal = () => {
     setAppraisalResult(null);
-    setCurrentItem("");
+    setCurrentEmployee(null);
   };
 
   return (
@@ -25,26 +33,28 @@ const Index = () => {
         {/* Header */}
         <div className="text-center mb-8">
           <h1 className="text-4xl font-bold mb-4 bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
-            Universal Appraisal Tool
+            Staff Performance Appraisal System
           </h1>
           <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-            Get instant valuations for any item across all organizations. Simple, fast, and reliable.
+            Comprehensive KPI-based performance evaluation tool for all organizations. Simple, fair, and scalable.
           </p>
         </div>
 
         {/* Main Content */}
-        <div className="max-w-4xl mx-auto">
+        <div className="max-w-5xl mx-auto">
           {!appraisalResult ? (
-            <AppraisalForm onSubmit={handleAppraisalSubmit} />
+            <StaffAppraisalForm onSubmit={handleAppraisalSubmit} />
           ) : (
             <div className="space-y-6">
-              <AppraisalResultComponent 
+              <StaffAppraisalResultComponent 
                 result={appraisalResult} 
-                itemName={currentItem}
+                employeeName={currentEmployee?.name || ""}
+                position={currentEmployee?.position || ""}
+                reviewPeriod={currentEmployee?.reviewPeriod || ""}
               />
               <div className="text-center">
                 <Button onClick={resetAppraisal} variant="outline">
-                  Appraise Another Item
+                  Appraise Another Employee
                 </Button>
               </div>
             </div>
@@ -53,7 +63,7 @@ const Index = () => {
 
         {/* Footer */}
         <div className="text-center mt-16 text-sm text-muted-foreground">
-          <p>Lightweight • Fast • Scalable across all organizations</p>
+          <p>Lightweight • Fair • Scalable across all organizations</p>
         </div>
       </div>
     </div>
