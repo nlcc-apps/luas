@@ -3,8 +3,11 @@ import { StaffAppraisalForm, StaffAppraisalData } from "@/components/AppraisalFo
 import { StaffAppraisalResultComponent, StaffAppraisalResult } from "@/components/AppraisalResult";
 import { calculateStaffAppraisal } from "@/lib/appraisalCalculator";
 import { Button } from "@/components/ui/button";
+import { useNavigate } from "react-router-dom";
+import { Settings } from "lucide-react";
 
 const Index = () => {
+  const navigate = useNavigate();
   const [appraisalResult, setAppraisalResult] = useState<StaffAppraisalResult | null>(null);
   const [currentEmployee, setCurrentEmployee] = useState<{
     name: string;
@@ -32,6 +35,16 @@ const Index = () => {
       <div className="container mx-auto px-4 py-8">
         {/* Header */}
         <div className="text-center mb-8">
+          <div className="flex justify-end mb-4">
+            <Button 
+              variant="outline" 
+              onClick={() => navigate("/admin")}
+              className="flex items-center gap-2"
+            >
+              <Settings className="h-4 w-4" />
+              Admin Panel
+            </Button>
+          </div>
           <h1 className="text-4xl font-bold mb-4 bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
             Staff Performance Appraisal System
           </h1>
