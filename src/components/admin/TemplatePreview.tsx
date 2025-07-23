@@ -59,7 +59,7 @@ export const TemplatePreview = () => {
             <SelectContent>
               {staffTemplates.length > 0 && (
                 <>
-                  <SelectItem value="" disabled className="font-medium">
+                  <SelectItem value="staff-header" disabled className="font-medium">
                     <Users className="h-4 w-4 inline mr-2" />
                     Staff Templates
                   </SelectItem>
@@ -74,7 +74,7 @@ export const TemplatePreview = () => {
               
               {managerTemplates.length > 0 && (
                 <>
-                  <SelectItem value="" disabled className="font-medium">
+                  <SelectItem value="manager-header" disabled className="font-medium">
                     <Building className="h-4 w-4 inline mr-2" />
                     Manager Templates
                   </SelectItem>
