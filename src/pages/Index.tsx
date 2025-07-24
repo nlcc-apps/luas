@@ -38,14 +38,22 @@ const Index = () => {
         <div className="text-center mb-8">
           <div className="flex justify-between items-center mb-4">
             <Logo size="md" />
-            <Button 
-              variant="outline" 
-              onClick={() => navigate("/admin")}
-              className="flex items-center gap-2"
-            >
-              <Settings className="h-4 w-4" />
-              Admin Panel
-            </Button>
+            <div className="flex gap-2">
+              <Button 
+                onClick={() => navigate("/dashboard")}
+                className="flex items-center gap-2"
+              >
+                Login / Dashboard
+              </Button>
+              <Button 
+                variant="outline" 
+                onClick={() => navigate("/admin")}
+                className="flex items-center gap-2"
+              >
+                <Settings className="h-4 w-4" />
+                Admin Panel
+              </Button>
+            </div>
           </div>
           <h1 className="text-4xl font-bold mb-4 bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
             Staff Performance Appraisal System

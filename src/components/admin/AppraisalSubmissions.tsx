@@ -1,81 +1,28 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Bell, CheckCircle, Clock, Eye, Users } from "lucide-react";
+import { Bell, CheckCircle, Clock, Eye, Users, ArrowRight } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { SubmissionPreview } from "./SubmissionPreview";
+import { getSubmissions, saveSubmissions, AppraisalSubmission } from "@/lib/userData";
 
-interface AppraisalSubmission {
-  id: string;
-  employeeName: string;
-  employeeId: string;
-  department: string;
-  submissionDate: string;
-  appraisalPeriod: string;
-  status: "submitted" | "available_for_manager" | "manager_completed" | "completed";
-  lineManager: string;
-  scores: {
-    selfRating: number;
-    managerRating?: number;
-  };
-}
-
-// Mock data - in real app this would come from your backend
-const mockSubmissions: AppraisalSubmission[] = [
-  {
-    id: "1",
-    employeeName: "John Smith",
-    employeeId: "EMP001",
-    department: "Engineering",
-    submissionDate: "2024-12-15",
-    appraisalPeriod: "Q4 2024",
-    status: "submitted",
-    lineManager: "Sarah Johnson",
-    scores: { selfRating: 4.2 }
-  },
-  {
-    id: "2", 
-    employeeName: "Mary Davis",
-    employeeId: "EMP002",
-    department: "Marketing",
-    submissionDate: "2024-12-14",
-    appraisalPeriod: "Q4 2024",
-    status: "available_for_manager",
-    lineManager: "Mike Wilson",
-    scores: { selfRating: 3.8 }
-  },
-  {
-    id: "3",
-    employeeName: "Robert Brown",
-    employeeId: "EMP003", 
-    department: "Engineering",
-    submissionDate: "2024-12-13",
-    appraisalPeriod: "Q4 2024",
-    status: "manager_completed",
-    lineManager: "Sarah Johnson",
-    scores: { selfRating: 4.0, managerRating: 3.9 }
-  },
-  {
-    id: "4",
-    employeeName: "Lisa Wilson",
-    employeeId: "EMP004",
-    department: "HR",
-    submissionDate: "2025-01-10",
-    appraisalPeriod: "Q1 2025",
-    status: "submitted",
-    lineManager: "David Chen",
-    scores: { selfRating: 4.5 }
-  }
-];
 
 export const AppraisalSubmissions = () => {
-  const [submissions] = useState<AppraisalSubmission[]>(mockSubmissions);
+  const [submissions, setSubmissions] = useState<AppraisalSubmission[]>([]);
   const [selectedPeriod, setSelectedPeriod] = useState<string>("all");
   const [selectedDepartment, setSelectedDepartment] = useState<string>("all");
   const [selectedStatus, setSelectedStatus] = useState<string>("all");
+  const [previewSubmission, setPreviewSubmission] = useState<AppraisalSubmission | null>(null);
+  const [showPreview, setShowPreview] = useState(false);
   const { toast } = useToast();
+
+  // Load submissions from localStorage
+  useEffect(() => {
+    setSubmissions(getSubmissions());
+  }, []);
 
   // Get unique values for filters
   const periods = useMemo(() => 
@@ -100,12 +47,14 @@ export const AppraisalSubmissions = () => {
   // Calculate notifications
   const pendingForManager = submissions.filter(s => s.status === "submitted").length;
   const awaitingManagerReview = submissions.filter(s => s.status === "available_for_manager").length;
+  const readyForCEO = submissions.filter(s => s.status === "manager_completed").length;
 
   const getStatusBadge = (status: AppraisalSubmission["status"]) => {
     const statusConfig = {
       submitted: { label: "Awaiting Admin", variant: "secondary" as const },
       available_for_manager: { label: "With Manager", variant: "default" as const },
       manager_completed: { label: "Manager Done", variant: "outline" as const },
+      available_for_ceo: { label: "Ready for CEO", variant: "default" as const },
       completed: { label: "Completed", variant: "default" as const }
     };
     
@@ -113,26 +62,52 @@ export const AppraisalSubmissions = () => {
     return <Badge variant={config.variant}>{config.label}</Badge>;
   };
 
+  const updateSubmissionStatus = (submissionId: string, newStatus: AppraisalSubmission["status"]) => {
+    const updatedSubmissions = submissions.map(submission =>
+      submission.id === submissionId
+        ? { ...submission, status: newStatus }
+        : submission
+    );
+    setSubmissions(updatedSubmissions);
+    saveSubmissions(updatedSubmissions);
+  };
+
   const handleMakeAvailableToManager = (submissionId: string) => {
-    // In real app, this would update the backend
+    updateSubmissionStatus(submissionId, "available_for_manager");
     toast({
       title: "Success",
       description: "Appraisal made available to line manager for review."
     });
   };
 
-  const handleViewSubmission = (submissionId: string) => {
-    // In real app, this would open submission details
+  const handleReleaseToCEO = (submissionId: string) => {
+    updateSubmissionStatus(submissionId, "available_for_ceo");
     toast({
-      title: "View Submission",
-      description: `Opening submission ${submissionId} details...`
+      title: "Success", 
+      description: "Appraisal forwarded to CEO for evaluation."
     });
+  };
+
+  const handleMarkCompleted = (submissionId: string) => {
+    updateSubmissionStatus(submissionId, "completed");
+    toast({
+      title: "Success",
+      description: "Appraisal marked as completed."
+    });
+  };
+
+  const handleViewSubmission = (submissionId: string) => {
+    const submission = submissions.find(s => s.id === submissionId);
+    if (submission) {
+      setPreviewSubmission(submission);
+      setShowPreview(true);
+    }
   };
 
   return (
     <div className="space-y-6">
       {/* Notifications */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <Card className="border-orange-200 bg-orange-50/50">
           <CardContent className="pt-4">
             <div className="flex items-center space-x-2">
@@ -154,6 +129,19 @@ export const AppraisalSubmissions = () => {
                 <p className="text-sm font-medium text-blue-800">With Line Managers</p>
                 <p className="text-2xl font-bold text-blue-900">{awaitingManagerReview}</p>
                 <p className="text-xs text-blue-600">Currently under manager review</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="border-purple-200 bg-purple-50/50">
+          <CardContent className="pt-4">
+            <div className="flex items-center space-x-2">
+              <Bell className="h-5 w-5 text-purple-600" />
+              <div>
+                <p className="text-sm font-medium text-purple-800">Ready for CEO</p>
+                <p className="text-2xl font-bold text-purple-900">{readyForCEO}</p>
+                <p className="text-xs text-purple-600">Manager evaluations completed</p>
               </div>
             </div>
           </CardContent>
@@ -200,6 +188,7 @@ export const AppraisalSubmissions = () => {
                 <SelectItem value="submitted">Awaiting Admin</SelectItem>
                 <SelectItem value="available_for_manager">With Manager</SelectItem>
                 <SelectItem value="manager_completed">Manager Done</SelectItem>
+                <SelectItem value="available_for_ceo">Ready for CEO</SelectItem>
                 <SelectItem value="completed">Completed</SelectItem>
               </SelectContent>
             </Select>
@@ -282,6 +271,30 @@ export const AppraisalSubmissions = () => {
                           Release to Manager
                         </Button>
                       )}
+
+                      {submission.status === "manager_completed" && (
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          onClick={() => handleReleaseToCEO(submission.id)}
+                          className="flex items-center gap-1"
+                        >
+                          <ArrowRight className="h-4 w-4" />
+                          Forward to CEO
+                        </Button>
+                      )}
+
+                      {(submission.status === "available_for_ceo" || submission.status === "manager_completed") && (
+                        <Button 
+                          variant="default" 
+                          size="sm"
+                          onClick={() => handleMarkCompleted(submission.id)}
+                          className="flex items-center gap-1"
+                        >
+                          <CheckCircle className="h-4 w-4" />
+                          Mark Complete
+                        </Button>
+                      )}
                       
                       {submission.status === "available_for_manager" && (
                         <div className="flex items-center gap-1 text-sm text-muted-foreground">
@@ -303,6 +316,16 @@ export const AppraisalSubmissions = () => {
           )}
         </CardContent>
       </Card>
+
+      {/* Submission Preview Modal */}
+      <SubmissionPreview
+        submission={previewSubmission}
+        open={showPreview}
+        onClose={() => setShowPreview(false)}
+        onMarkCompleted={handleMarkCompleted}
+        onReleaseToManager={handleMakeAvailableToManager}
+        onReleaseToCEO={handleReleaseToCEO}
+      />
     </div>
   );
 };
