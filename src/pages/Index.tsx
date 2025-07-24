@@ -3,6 +3,7 @@ import { StaffAppraisalForm, StaffAppraisalData } from "@/components/AppraisalFo
 import { StaffAppraisalResultComponent, StaffAppraisalResult } from "@/components/AppraisalResult";
 import { calculateStaffAppraisal } from "@/lib/appraisalCalculator";
 import { Button } from "@/components/ui/button";
+import { Logo } from "@/components/ui/Logo";
 import { useNavigate } from "react-router-dom";
 import { Settings } from "lucide-react";
 
@@ -35,7 +36,8 @@ const Index = () => {
       <div className="container mx-auto px-4 py-8">
         {/* Header */}
         <div className="text-center mb-8">
-          <div className="flex justify-end mb-4">
+          <div className="flex justify-between items-center mb-4">
+            <Logo size="md" />
             <Button 
               variant="outline" 
               onClick={() => navigate("/admin")}
