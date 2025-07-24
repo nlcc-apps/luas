@@ -5,6 +5,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { TemplateManager } from "@/components/admin/TemplateManager";
 import { TemplatePreview } from "@/components/admin/TemplatePreview";
 import { DepartmentTemplates } from "@/components/admin/DepartmentTemplates";
+import { AppraisalSubmissions } from "@/components/admin/AppraisalSubmissions";
 import { AdminLogin } from "@/components/auth/AdminLogin";
 import { Logo } from "@/components/ui/Logo";
 import { useNavigate } from "react-router-dom";
@@ -70,12 +71,24 @@ const Admin = () => {
 
         {/* Main Content */}
         <div className="max-w-7xl mx-auto">
-          <Tabs defaultValue="templates" className="space-y-6">
-            <TabsList className="grid w-full grid-cols-3">
+          <Tabs defaultValue="submissions" className="space-y-6">
+            <TabsList className="grid w-full grid-cols-4">
+              <TabsTrigger value="submissions">Submissions</TabsTrigger>
               <TabsTrigger value="templates">Template Manager</TabsTrigger>
               <TabsTrigger value="departments">Department Templates</TabsTrigger>
               <TabsTrigger value="preview">Template Preview</TabsTrigger>
             </TabsList>
+
+            <TabsContent value="submissions">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Appraisal Submissions Management</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <AppraisalSubmissions />
+                </CardContent>
+              </Card>
+            </TabsContent>
 
             <TabsContent value="templates">
               <Card>
