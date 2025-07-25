@@ -15,7 +15,7 @@ const Index = () => {
             <Logo size="md" />
             <div className="flex gap-2">
               <Button 
-                onClick={() => navigate("/dashboard")}
+                onClick={() => navigate("/login")}
                 className="flex items-center gap-2"
               >
                 Login
@@ -80,7 +80,7 @@ const Index = () => {
             <div className="flex justify-center gap-4">
               <Button 
                 size="lg"
-                onClick={() => navigate("/dashboard")}
+                onClick={() => navigate("/login")}
                 className="px-8"
               >
                 Sign In to Your Account
