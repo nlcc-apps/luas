@@ -42,7 +42,7 @@ export const UserLogin = ({ onLogin }: UserLoginProps) => {
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20 flex items-center justify-center px-4">
       <div className="w-full max-w-md space-y-6">
         <div className="text-center space-y-4">
-          <div className="flex justify-center">
+          <div className="flex justify-center mt-16">
             <Logo size="lg" />
           </div>
           <p className="text-muted-foreground mt-2">

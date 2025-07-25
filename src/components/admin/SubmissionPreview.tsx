@@ -1,10 +1,12 @@
+import { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { AppraisalSubmission } from "@/lib/userData";
-import { Star, User, Calendar, Building, CheckCircle, ArrowRight } from "lucide-react";
+import { AppraisalSubmission, saveSubmissions, getSubmissions } from "@/lib/userData";
+import { ManagerEvaluationForm } from "./ManagerEvaluationForm";
+import { Star, User, Calendar, Building, CheckCircle, ArrowRight, Edit } from "lucide-react";
 
 interface SubmissionPreviewProps {
   submission: AppraisalSubmission | null;
@@ -13,6 +15,7 @@ interface SubmissionPreviewProps {
   onMarkCompleted?: (submissionId: string) => void;
   onReleaseToManager?: (submissionId: string) => void;
   onReleaseToCEO?: (submissionId: string) => void;
+  userRole?: string;
 }
 
 export const SubmissionPreview = ({ 
@@ -21,8 +24,11 @@ export const SubmissionPreview = ({
   onClose, 
   onMarkCompleted,
   onReleaseToManager,
-  onReleaseToCEO 
+  onReleaseToCEO,
+  userRole 
 }: SubmissionPreviewProps) => {
+  const [showEvaluationForm, setShowEvaluationForm] = useState(false);
+  
   if (!submission) return null;
 
   const getStatusBadge = (status: AppraisalSubmission["status"]) => {
@@ -36,6 +42,29 @@ export const SubmissionPreview = ({
     
     const config = statusConfig[status];
     return <Badge variant={config.variant}>{config.label}</Badge>;
+  };
+
+  const handleSaveEvaluation = (evaluationData: any) => {
+    const submissions = getSubmissions();
+    const { productivity, quality, communication, teamwork, initiative, reliability } = evaluationData;
+    const managerRating = (productivity + quality + communication + teamwork + initiative + reliability) / 6;
+    
+    const updatedSubmissions = submissions.map(s => 
+      s.id === submission.id 
+        ? { 
+            ...s, 
+            managerEvaluation: evaluationData,
+            scores: {
+              ...s.scores,
+              managerRating
+            },
+            status: "manager_completed" as const
+          }
+        : s
+    );
+    saveSubmissions(updatedSubmissions);
+    setShowEvaluationForm(false);
+    onClose();
   };
 
   const renderKPISection = (title: string, scores: any) => {
@@ -125,6 +154,23 @@ export const SubmissionPreview = ({
       </Card>
     );
   };
+
+  if (showEvaluationForm) {
+    return (
+      <Dialog open={open} onOpenChange={onClose}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Manager Evaluation</DialogTitle>
+          </DialogHeader>
+          <ManagerEvaluationForm
+            submission={submission}
+            onSave={handleSaveEvaluation}
+            onCancel={() => setShowEvaluationForm(false)}
+          />
+        </DialogContent>
+      </Dialog>
+    );
+  }
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
@@ -219,6 +265,16 @@ export const SubmissionPreview = ({
 
           {/* Action Buttons */}
           <div className="flex justify-end gap-2 pt-4">
+            {userRole === "manager" && submission.status === "available_for_manager" && (
+              <Button 
+                onClick={() => setShowEvaluationForm(true)}
+                className="flex items-center gap-2"
+              >
+                <Edit className="h-4 w-4" />
+                Complete Evaluation
+              </Button>
+            )}
+            
             {submission.status === "submitted" && onReleaseToManager && (
               <Button 
                 onClick={() => onReleaseToManager(submission.id)}

@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { UserLogin } from "@/components/auth/UserLogin";
-import { StaffAppraisalForm } from "@/components/AppraisalForm";
+import { SelfAppraisalSection } from "@/components/SelfAppraisalSection";
 import { Logo } from "@/components/ui/Logo";
 import { SubmissionPreview } from "@/components/admin/SubmissionPreview";
 import { User, initializeData, getSubmissionsForManager, getSubmissionsForCEO, AppraisalSubmission } from "@/lib/userData";
@@ -275,29 +275,14 @@ const Dashboard = () => {
                     <CardTitle>My Self Appraisal</CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <div className="space-y-4">
-                      <div className="flex items-center gap-4 p-4 bg-muted/50 rounded-lg">
-                        <FileText className="h-8 w-8 text-primary" />
-                        <div>
-                          <h3 className="font-semibold">Performance Self-Assessment</h3>
-                          <p className="text-sm text-muted-foreground">
-                            Complete your self-appraisal for the current review period
-                          </p>
-                        </div>
-                        <Button onClick={handleSelfAppraisal} className="ml-auto">
-                          Start Self Appraisal
-                        </Button>
-                      </div>
-                      
-                      <StaffAppraisalForm 
-                        onSubmit={(data) => {
-                          toast({
-                            title: "Self Appraisal Submitted",
-                            description: "Your self-appraisal has been submitted for review",
-                          });
-                        }}
-                      />
-                    </div>
+                    <SelfAppraisalSection 
+                      onSubmit={(data) => {
+                        toast({
+                          title: "Self Appraisal Submitted",
+                          description: "Your self-appraisal has been submitted for review",
+                        });
+                      }}
+                    />
                   </CardContent>
                 </Card>
               </TabsContent>
@@ -311,6 +296,7 @@ const Dashboard = () => {
         submission={previewSubmission}
         open={showPreview}
         onClose={() => setShowPreview(false)}
+        userRole={currentUser.role}
       />
     </div>
   );

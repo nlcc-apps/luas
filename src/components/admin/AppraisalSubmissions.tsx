@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Bell, CheckCircle, Clock, Eye, Users, ArrowRight } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { SubmissionPreview } from "./SubmissionPreview";
@@ -17,6 +18,7 @@ export const AppraisalSubmissions = () => {
   const [selectedStatus, setSelectedStatus] = useState<string>("all");
   const [previewSubmission, setPreviewSubmission] = useState<AppraisalSubmission | null>(null);
   const [showPreview, setShowPreview] = useState(false);
+  const [selectedSubmissions, setSelectedSubmissions] = useState<string[]>([]);
   const { toast } = useToast();
 
   // Load submissions from localStorage
@@ -102,6 +104,51 @@ export const AppraisalSubmissions = () => {
       setPreviewSubmission(submission);
       setShowPreview(true);
     }
+  };
+
+  const handleBulkAction = (action: "releaseToManager" | "releaseToCEO") => {
+    if (selectedSubmissions.length === 0) {
+      toast({
+        title: "No selections",
+        description: "Please select submissions to perform bulk action.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    const newStatus = action === "releaseToManager" ? "available_for_manager" : "available_for_ceo";
+    const updatedSubmissions = submissions.map(submission =>
+      selectedSubmissions.includes(submission.id)
+        ? { ...submission, status: newStatus as AppraisalSubmission["status"] }
+        : submission
+    );
+
+    setSubmissions(updatedSubmissions);
+    saveSubmissions(updatedSubmissions);
+    setSelectedSubmissions([]);
+
+    toast({
+      title: "Bulk action completed",
+      description: `${selectedSubmissions.length} submissions have been ${action === "releaseToManager" ? "released to managers" : "forwarded to CEO"}.`
+    });
+  };
+
+  const handleSelectSubmission = (submissionId: string) => {
+    setSelectedSubmissions(prev => 
+      prev.includes(submissionId) 
+        ? prev.filter(id => id !== submissionId)
+        : [...prev, submissionId]
+    );
+  };
+
+  const handleSelectAll = () => {
+    const eligibleSubmissions = filteredSubmissions.filter(s => 
+      s.status === "submitted" || s.status === "manager_completed"
+    ).map(s => s.id);
+    
+    setSelectedSubmissions(prev => 
+      prev.length === eligibleSubmissions.length ? [] : eligibleSubmissions
+    );
   };
 
   return (
@@ -207,6 +254,46 @@ export const AppraisalSubmissions = () => {
         </CardContent>
       </Card>
 
+      {/* Bulk Actions */}
+      {selectedSubmissions.length > 0 && (
+        <Card className="border-blue-200 bg-blue-50/50">
+          <CardContent className="pt-4">
+            <div className="flex items-center justify-between">
+              <span className="text-sm font-medium">
+                {selectedSubmissions.length} submission(s) selected
+              </span>
+              <div className="flex gap-2">
+                <Button 
+                  size="sm"
+                  onClick={() => handleBulkAction("releaseToManager")}
+                  disabled={!selectedSubmissions.some(id => 
+                    submissions.find(s => s.id === id)?.status === "submitted"
+                  )}
+                >
+                  Release to Managers
+                </Button>
+                <Button 
+                  size="sm"
+                  onClick={() => handleBulkAction("releaseToCEO")}
+                  disabled={!selectedSubmissions.some(id => 
+                    submissions.find(s => s.id === id)?.status === "manager_completed"
+                  )}
+                >
+                  Forward to CEO
+                </Button>
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={() => setSelectedSubmissions([])}
+                >
+                  Clear Selection
+                </Button>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Submissions Table */}
       <Card>
         <CardHeader>
@@ -216,6 +303,14 @@ export const AppraisalSubmissions = () => {
           <Table>
             <TableHeader>
               <TableRow>
+                <TableHead className="w-12">
+                  <Checkbox
+                    checked={selectedSubmissions.length > 0 && selectedSubmissions.length === filteredSubmissions.filter(s => 
+                      s.status === "submitted" || s.status === "manager_completed"
+                    ).length}
+                    onCheckedChange={handleSelectAll}
+                  />
+                </TableHead>
                 <TableHead>Employee</TableHead>
                 <TableHead>Department</TableHead>
                 <TableHead>Period</TableHead>
@@ -229,6 +324,14 @@ export const AppraisalSubmissions = () => {
             <TableBody>
               {filteredSubmissions.map((submission) => (
                 <TableRow key={submission.id}>
+                  <TableCell>
+                    {(submission.status === "submitted" || submission.status === "manager_completed") && (
+                      <Checkbox
+                        checked={selectedSubmissions.includes(submission.id)}
+                        onCheckedChange={() => handleSelectSubmission(submission.id)}
+                      />
+                    )}
+                  </TableCell>
                   <TableCell>
                     <div>
                       <p className="font-medium">{submission.employeeName}</p>
