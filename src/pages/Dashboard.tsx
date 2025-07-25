@@ -6,6 +6,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { UserLogin } from "@/components/auth/UserLogin";
 import { StaffAppraisalForm } from "@/components/AppraisalForm";
 import { Logo } from "@/components/ui/Logo";
+import { SubmissionPreview } from "@/components/admin/SubmissionPreview";
 import { User, initializeData, getSubmissionsForManager, getSubmissionsForCEO, AppraisalSubmission } from "@/lib/userData";
 import { useToast } from "@/hooks/use-toast";
 import { LogOut, Bell, Users, FileText, Star, Eye, CheckCircle } from "lucide-react";
@@ -14,6 +15,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 const Dashboard = () => {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [submissions, setSubmissions] = useState<AppraisalSubmission[]>([]);
+  const [previewSubmission, setPreviewSubmission] = useState<AppraisalSubmission | null>(null);
+  const [showPreview, setShowPreview] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -62,10 +65,11 @@ const Dashboard = () => {
   };
 
   const handleEvaluateSubmission = (submissionId: string) => {
-    toast({
-      title: "Evaluate Submission",
-      description: `Opening evaluation form for submission ${submissionId}`,
-    });
+    const submission = submissions.find(s => s.id === submissionId);
+    if (submission) {
+      setPreviewSubmission(submission);
+      setShowPreview(true);
+    }
   };
 
   const getStatusBadge = (status: AppraisalSubmission["status"]) => {
@@ -301,6 +305,13 @@ const Dashboard = () => {
           </Tabs>
         </div>
       </div>
+
+      {/* Submission Preview Modal */}
+      <SubmissionPreview
+        submission={previewSubmission}
+        open={showPreview}
+        onClose={() => setShowPreview(false)}
+      />
     </div>
   );
 };
