@@ -19,6 +19,7 @@ export const AppraisalSubmissions = () => {
   const [previewSubmission, setPreviewSubmission] = useState<AppraisalSubmission | null>(null);
   const [showPreview, setShowPreview] = useState(false);
   const [selectedSubmissions, setSelectedSubmissions] = useState<string[]>([]);
+  const [processingSubmissions, setProcessingSubmissions] = useState<string[]>([]);
   const { toast } = useToast();
 
   // Load submissions from localStorage
@@ -75,11 +76,13 @@ export const AppraisalSubmissions = () => {
   };
 
   const handleMakeAvailableToManager = (submissionId: string) => {
+    setProcessingSubmissions(prev => [...prev, submissionId]);
     updateSubmissionStatus(submissionId, "available_for_manager");
     toast({
       title: "Success",
       description: "Appraisal made available to line manager for review."
     });
+    setProcessingSubmissions(prev => prev.filter(id => id !== submissionId));
   };
 
   const handleReleaseToCEO = (submissionId: string) => {
@@ -368,10 +371,11 @@ export const AppraisalSubmissions = () => {
                           variant="outline" 
                           size="sm"
                           onClick={() => handleMakeAvailableToManager(submission.id)}
+                          disabled={processingSubmissions.includes(submission.id)}
                           className="flex items-center gap-1"
                         >
                           <CheckCircle className="h-4 w-4" />
-                          Release to Manager
+                          {processingSubmissions.includes(submission.id) ? "Releasing..." : "Release to Manager"}
                         </Button>
                       )}
 

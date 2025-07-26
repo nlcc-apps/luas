@@ -28,6 +28,7 @@ export const SubmissionPreview = ({
   userRole 
 }: SubmissionPreviewProps) => {
   const [showEvaluationForm, setShowEvaluationForm] = useState(false);
+  const [isReleasing, setIsReleasing] = useState(false);
   
   if (!submission) return null;
 
@@ -277,11 +278,15 @@ export const SubmissionPreview = ({
             
             {submission.status === "submitted" && onReleaseToManager && (
               <Button 
-                onClick={() => onReleaseToManager(submission.id)}
+                onClick={() => {
+                  setIsReleasing(true);
+                  onReleaseToManager(submission.id);
+                }}
+                disabled={isReleasing}
                 className="flex items-center gap-2"
               >
                 <ArrowRight className="h-4 w-4" />
-                Release to Manager
+                {isReleasing ? "Releasing..." : "Release to Manager"}
               </Button>
             )}
             
