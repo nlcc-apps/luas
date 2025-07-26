@@ -261,7 +261,7 @@ export const StaffAppraisalForm = ({ onSubmit }: StaffAppraisalFormProps) => {
             className="w-full"
             disabled={!formData.employeeName || !formData.position || !formData.department || !formData.reviewPeriod}
           >
-            Generate Performance Report
+            Submit
           </Button>
         </form>
       </CardContent>

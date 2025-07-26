@@ -14,8 +14,13 @@ export const SelfAppraisalSection = ({ onSubmit }: SelfAppraisalSectionProps) =>
     setShowForm(true);
   };
 
+  const handleSubmit = (data: any) => {
+    onSubmit(data);
+    setShowForm(false); // Close form after submission
+  };
+
   if (showForm) {
-    return <StaffAppraisalForm onSubmit={onSubmit} />;
+    return <StaffAppraisalForm onSubmit={handleSubmit} />;
   }
 
   return (

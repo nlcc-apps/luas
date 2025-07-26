@@ -7,7 +7,7 @@ import { UserLogin } from "@/components/auth/UserLogin";
 import { SelfAppraisalSection } from "@/components/SelfAppraisalSection";
 import { Logo } from "@/components/ui/Logo";
 import { SubmissionPreview } from "@/components/admin/SubmissionPreview";
-import { User, initializeData, getSubmissionsForManager, getSubmissionsForCEO, AppraisalSubmission } from "@/lib/userData";
+import { User, initializeData, getSubmissionsForManager, getSubmissionsForCEO, AppraisalSubmission, getSubmissions, saveSubmissions } from "@/lib/userData";
 import { useToast } from "@/hooks/use-toast";
 import { LogOut, Bell, Users, FileText, Star, Eye, CheckCircle } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -277,6 +277,26 @@ const Dashboard = () => {
                   <CardContent>
                     <SelfAppraisalSection 
                       onSubmit={(data) => {
+                        // Save the self-appraisal submission
+                        const submissions = getSubmissions();
+                        const { productivity, quality, communication, teamwork, initiative, reliability } = data;
+                        const selfRating = (productivity + quality + communication + teamwork + initiative + reliability) / 6;
+                        
+                        const newSubmission: AppraisalSubmission = {
+                          id: `sub_${Date.now()}`,
+                          employeeId: currentUser!.id,
+                          employeeName: currentUser!.name,
+                          department: currentUser!.department,
+                          submissionDate: new Date().toISOString(),
+                          appraisalPeriod: data.reviewPeriod,
+                          status: "submitted",
+                          lineManager: currentUser!.lineManager || "",
+                          selfAppraisal: data,
+                          scores: { selfRating }
+                        };
+                        
+                        saveSubmissions([...submissions, newSubmission]);
+                        
                         toast({
                           title: "Self Appraisal Submitted",
                           description: "Your self-appraisal has been submitted for review",
