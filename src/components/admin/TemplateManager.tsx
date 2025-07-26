@@ -22,6 +22,7 @@ export interface AppraisalTemplate {
   description: string;
   type: "staff" | "manager";
   department?: string;
+  appraisalPeriod?: string;
   kpis: KPI[];
   createdAt: string;
   updatedAt: string;
@@ -199,7 +200,7 @@ export const TemplateManager = () => {
         </div>
 
         <div className="grid gap-4">
-          <div className="grid gap-4 md:grid-cols-2">
+          <div className="grid gap-4 md:grid-cols-3">
             <div className="space-y-2">
               <Label htmlFor="templateName">Template Name *</Label>
               <Input
@@ -229,6 +230,19 @@ export const TemplateManager = () => {
                   <SelectItem value="manager">Manager</SelectItem>
                 </SelectContent>
               </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="appraisalPeriod">Appraisal Period</Label>
+              <Input
+                id="appraisalPeriod"
+                value={editingTemplate.appraisalPeriod || ""}
+                onChange={(e) => setEditingTemplate({
+                  ...editingTemplate,
+                  appraisalPeriod: e.target.value
+                })}
+                placeholder="e.g., Jan 2024 - Dec 2024"
+              />
             </div>
           </div>
 
@@ -341,6 +355,9 @@ export const TemplateManager = () => {
                   </Badge>
                   {template.department && (
                     <Badge variant="outline">{template.department}</Badge>
+                  )}
+                  {template.appraisalPeriod && (
+                    <Badge variant="outline">{template.appraisalPeriod}</Badge>
                   )}
                 </div>
               </div>

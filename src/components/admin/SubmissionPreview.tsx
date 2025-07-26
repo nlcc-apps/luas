@@ -83,7 +83,7 @@ export const SubmissionPreview = ({
                 {[...Array(5)].map((_, i) => (
                   <Star 
                     key={i} 
-                    className={`h-4 w-4 ${i < (scores.productivity || 0) ? 'fill-yellow-400 text-yellow-400' : 'text-gray-300'}`} 
+                    className={`h-4 w-4 ${i < (scores.productivity || 0) ? 'fill-[hsl(var(--star-filled))] text-[hsl(var(--star-filled))]' : 'text-[hsl(var(--star-empty))]'}`} 
                   />
                 ))}
                 <span className="ml-2 text-sm">{scores.productivity || 0}/5</span>
@@ -95,7 +95,7 @@ export const SubmissionPreview = ({
                 {[...Array(5)].map((_, i) => (
                   <Star 
                     key={i} 
-                    className={`h-4 w-4 ${i < (scores.quality || 0) ? 'fill-yellow-400 text-yellow-400' : 'text-gray-300'}`} 
+                    className={`h-4 w-4 ${i < (scores.quality || 0) ? 'fill-[hsl(var(--star-filled))] text-[hsl(var(--star-filled))]' : 'text-[hsl(var(--star-empty))]'}`} 
                   />
                 ))}
                 <span className="ml-2 text-sm">{scores.quality || 0}/5</span>
@@ -107,7 +107,7 @@ export const SubmissionPreview = ({
                 {[...Array(5)].map((_, i) => (
                   <Star 
                     key={i} 
-                    className={`h-4 w-4 ${i < (scores.communication || 0) ? 'fill-yellow-400 text-yellow-400' : 'text-gray-300'}`} 
+                    className={`h-4 w-4 ${i < (scores.communication || 0) ? 'fill-[hsl(var(--star-filled))] text-[hsl(var(--star-filled))]' : 'text-[hsl(var(--star-empty))]'}`} 
                   />
                 ))}
                 <span className="ml-2 text-sm">{scores.communication || 0}/5</span>
@@ -119,7 +119,7 @@ export const SubmissionPreview = ({
                 {[...Array(5)].map((_, i) => (
                   <Star 
                     key={i} 
-                    className={`h-4 w-4 ${i < (scores.teamwork || 0) ? 'fill-yellow-400 text-yellow-400' : 'text-gray-300'}`} 
+                    className={`h-4 w-4 ${i < (scores.teamwork || 0) ? 'fill-[hsl(var(--star-filled))] text-[hsl(var(--star-filled))]' : 'text-[hsl(var(--star-empty))]'}`} 
                   />
                 ))}
                 <span className="ml-2 text-sm">{scores.teamwork || 0}/5</span>
@@ -131,7 +131,7 @@ export const SubmissionPreview = ({
                 {[...Array(5)].map((_, i) => (
                   <Star 
                     key={i} 
-                    className={`h-4 w-4 ${i < (scores.initiative || 0) ? 'fill-yellow-400 text-yellow-400' : 'text-gray-300'}`} 
+                    className={`h-4 w-4 ${i < (scores.initiative || 0) ? 'fill-[hsl(var(--star-filled))] text-[hsl(var(--star-filled))]' : 'text-[hsl(var(--star-empty))]'}`} 
                   />
                 ))}
                 <span className="ml-2 text-sm">{scores.initiative || 0}/5</span>
@@ -143,7 +143,7 @@ export const SubmissionPreview = ({
                 {[...Array(5)].map((_, i) => (
                   <Star 
                     key={i} 
-                    className={`h-4 w-4 ${i < (scores.reliability || 0) ? 'fill-yellow-400 text-yellow-400' : 'text-gray-300'}`} 
+                    className={`h-4 w-4 ${i < (scores.reliability || 0) ? 'fill-[hsl(var(--star-filled))] text-[hsl(var(--star-filled))]' : 'text-[hsl(var(--star-empty))]'}`} 
                   />
                 ))}
                 <span className="ml-2 text-sm">{scores.reliability || 0}/5</span>
