@@ -5,9 +5,10 @@ import { FileText } from "lucide-react";
 
 interface SelfAppraisalSectionProps {
   onSubmit: (data: any) => void;
+  currentUser?: any; // Add current user to auto-fill form
 }
 
-export const SelfAppraisalSection = ({ onSubmit }: SelfAppraisalSectionProps) => {
+export const SelfAppraisalSection = ({ onSubmit, currentUser }: SelfAppraisalSectionProps) => {
   const [showForm, setShowForm] = useState(false);
 
   const handleStartAppraisal = () => {
@@ -20,7 +21,7 @@ export const SelfAppraisalSection = ({ onSubmit }: SelfAppraisalSectionProps) =>
   };
 
   if (showForm) {
-    return <StaffAppraisalForm onSubmit={handleSubmit} />;
+    return <StaffAppraisalForm onSubmit={handleSubmit} currentUser={currentUser} />;
   }
 
   return (

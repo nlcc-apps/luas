@@ -34,15 +34,16 @@ export interface StaffAppraisalData {
 
 interface StaffAppraisalFormProps {
   onSubmit: (data: StaffAppraisalData) => void;
+  currentUser?: any; // Add current user to auto-fill form
 }
 
-export const StaffAppraisalForm = ({ onSubmit }: StaffAppraisalFormProps) => {
+export const StaffAppraisalForm = ({ onSubmit, currentUser }: StaffAppraisalFormProps) => {
   const [formData, setFormData] = useState<StaffAppraisalData>({
-    employeeName: "",
-    position: "",
-    department: "",
+    employeeName: currentUser?.name || "",
+    position: currentUser?.position || "",
+    department: currentUser?.department || "",
     reviewPeriod: "",
-    directSupervisor: "",
+    directSupervisor: currentUser?.lineManager || "",
     productivity: 3,
     quality: 3,
     communication: 3,

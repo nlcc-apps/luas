@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { AppraisalSubmission, saveSubmissions, getSubmissions } from "@/lib/userData";
 import { ManagerEvaluationForm } from "./ManagerEvaluationForm";
+import { CEOKPIEvaluationForm } from "./CEOKPIEvaluationForm";
 import { Star, User, Calendar, Building, CheckCircle, ArrowRight, Edit } from "lucide-react";
 
 interface SubmissionPreviewProps {
@@ -28,6 +29,7 @@ export const SubmissionPreview = ({
   userRole 
 }: SubmissionPreviewProps) => {
   const [showEvaluationForm, setShowEvaluationForm] = useState(false);
+  const [showCEOKPIForm, setShowCEOKPIForm] = useState(false);
   const [isReleasing, setIsReleasing] = useState(false);
   
   if (!submission) return null;
@@ -65,6 +67,29 @@ export const SubmissionPreview = ({
     );
     saveSubmissions(updatedSubmissions);
     setShowEvaluationForm(false);
+    onClose();
+  };
+
+  const handleSaveCEOKPIEvaluation = (evaluationData: any) => {
+    const submissions = getSubmissions();
+    const { strategicLeadership, teamManagement, financialPerformance, operationalExcellence, stakeholderRelations, innovationGrowth } = evaluationData;
+    const ceoRating = (strategicLeadership + teamManagement + financialPerformance + operationalExcellence + stakeholderRelations + innovationGrowth) / 6;
+    
+    const updatedSubmissions = submissions.map(s => 
+      s.id === submission.id 
+        ? { 
+            ...s, 
+            ceoEvaluation: evaluationData,
+            scores: {
+              ...s.scores,
+              ceoRating
+            },
+            status: "completed" as const
+          }
+        : s
+    );
+    saveSubmissions(updatedSubmissions);
+    setShowCEOKPIForm(false);
     onClose();
   };
 
@@ -173,6 +198,23 @@ export const SubmissionPreview = ({
     );
   }
 
+  if (showCEOKPIForm) {
+    return (
+      <Dialog open={open} onOpenChange={onClose}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>CEO KPI Evaluation</DialogTitle>
+          </DialogHeader>
+          <CEOKPIEvaluationForm
+            submission={submission}
+            onSave={handleSaveCEOKPIEvaluation}
+            onCancel={() => setShowCEOKPIForm(false)}
+          />
+        </DialogContent>
+      </Dialog>
+    );
+  }
+
   return (
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
@@ -273,6 +315,16 @@ export const SubmissionPreview = ({
               >
                 <Edit className="h-4 w-4" />
                 Complete Evaluation
+              </Button>
+            )}
+
+            {userRole === "ceo" && submission.status === "available_for_ceo" && (
+              <Button 
+                onClick={() => setShowCEOKPIForm(true)}
+                className="flex items-center gap-2"
+              >
+                <Edit className="h-4 w-4" />
+                Evaluate KPIs
               </Button>
             )}
             

@@ -89,6 +89,11 @@ const Dashboard = () => {
     return <UserLogin onLogin={handleLogin} />;
   }
 
+  // Show different dashboard for employees
+  if (currentUser.role === "employee") {
+    return <EmployeeDashboard currentUser={currentUser} onLogout={handleLogout} />;
+  }
+
   const pendingReviews = submissions.filter(s => 
     (currentUser.role === "manager" && s.status === "available_for_manager") ||
     (currentUser.role === "ceo" && s.status === "available_for_ceo")
@@ -240,8 +245,7 @@ const Dashboard = () => {
                                 <Eye className="h-4 w-4" />
                               </Button>
                               
-                              {((currentUser.role === "manager" && submission.status === "available_for_manager") ||
-                                (currentUser.role === "ceo" && submission.status === "available_for_ceo")) && (
+                              {currentUser.role === "manager" && submission.status === "available_for_manager" && (
                                 <Button 
                                   variant="outline" 
                                   size="sm"
@@ -250,6 +254,18 @@ const Dashboard = () => {
                                 >
                                   <Star className="h-4 w-4" />
                                   Evaluate
+                                </Button>
+                              )}
+                              
+                              {currentUser.role === "ceo" && submission.status === "available_for_ceo" && (
+                                <Button 
+                                  variant="outline" 
+                                  size="sm"
+                                  onClick={() => handleEvaluateSubmission(submission.id)}
+                                  className="flex items-center gap-1"
+                                >
+                                  <Star className="h-4 w-4" />
+                                  Evaluate KPIs
                                 </Button>
                               )}
                             </div>
@@ -276,6 +292,7 @@ const Dashboard = () => {
                   </CardHeader>
                   <CardContent>
                     <SelfAppraisalSection 
+                      currentUser={currentUser}
                       onSubmit={(data) => {
                         // Save the self-appraisal submission
                         const submissions = getSubmissions();
@@ -323,3 +340,166 @@ const Dashboard = () => {
 };
 
 export default Dashboard;
+
+// Employee Dashboard Component
+export const EmployeeDashboard = ({ currentUser, onLogout }: { currentUser: User, onLogout: () => void }) => {
+  const [userSubmission, setUserSubmission] = useState<AppraisalSubmission | null>(null);
+  const { toast } = useToast();
+
+  useEffect(() => {
+    // Load the employee's own submission
+    const submissions = getSubmissions();
+    const mySubmission = submissions.find(s => s.employeeId === currentUser.id);
+    setUserSubmission(mySubmission);
+  }, [currentUser.id]);
+
+  const getEmployeeStatusDisplay = (status: AppraisalSubmission["status"]) => {
+    const statusConfig = {
+      submitted: { label: "Submitted (with admin)", variant: "secondary" as const, description: "Your appraisal has been submitted and is being processed by admin" },
+      available_for_manager: { label: "Under Evaluation (with manager)", variant: "default" as const, description: "Your line manager is currently reviewing your appraisal" },
+      manager_completed: { label: "Manager Review Complete", variant: "outline" as const, description: "Manager has completed evaluation, awaiting final approval" },
+      available_for_ceo: { label: "Under Final Review", variant: "default" as const, description: "Under final review by senior management" },
+      completed: { label: "Completed", variant: "default" as const, description: "Your appraisal process is complete" }
+    };
+    
+    const config = statusConfig[status];
+    return (
+      <div className="space-y-2">
+        <Badge variant={config.variant}>{config.label}</Badge>
+        <p className="text-sm text-muted-foreground">{config.description}</p>
+      </div>
+    );
+  };
+
+  const calculateTotalScore = () => {
+    if (!userSubmission) return null;
+    
+    const selfScore = userSubmission.scores.selfRating;
+    const managerScore = userSubmission.scores.managerRating;
+    
+    if (managerScore) {
+      return ((selfScore + managerScore) / 2).toFixed(1);
+    }
+    
+    return selfScore.toFixed(1);
+  };
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20">
+      <div className="container mx-auto px-4 py-8">
+        {/* Header */}
+        <div className="flex items-center justify-between mb-8">
+          <div className="flex items-center gap-6">
+            <Logo size="lg" />
+            <div>
+              <h1 className="text-4xl font-bold mb-2 bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
+                Employee Dashboard
+              </h1>
+              <p className="text-xl text-muted-foreground">
+                Welcome back, {currentUser.name}
+              </p>
+            </div>
+          </div>
+          <Button 
+            variant="destructive" 
+            onClick={onLogout}
+            className="flex items-center gap-2"
+          >
+            <LogOut className="h-4 w-4" />
+            Logout
+          </Button>
+        </div>
+
+        {/* Dashboard Content */}
+        <div className="max-w-4xl mx-auto space-y-6">
+          {/* My Appraisal Status */}
+          <Card>
+            <CardHeader>
+              <CardTitle>My Appraisal Status</CardTitle>
+            </CardHeader>
+            <CardContent>
+              {userSubmission ? (
+                <div className="space-y-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                      <h3 className="font-semibold mb-2">Current Status</h3>
+                      {getEmployeeStatusDisplay(userSubmission.status)}
+                    </div>
+                    <div>
+                      <h3 className="font-semibold mb-2">Total Score</h3>
+                      <div className="text-3xl font-bold text-primary">
+                        {calculateTotalScore()}/5.0
+                      </div>
+                      <p className="text-sm text-muted-foreground">
+                        {userSubmission.scores.managerRating 
+                          ? "Combined self and manager rating"
+                          : "Self rating (pending manager evaluation)"
+                        }
+                      </p>
+                    </div>
+                  </div>
+                  
+                  {userSubmission.scores.managerRating && (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4 border-t">
+                      <div>
+                        <h4 className="font-medium text-sm text-muted-foreground">Self Rating</h4>
+                        <div className="text-xl font-semibold">{userSubmission.scores.selfRating.toFixed(1)}/5.0</div>
+                      </div>
+                      <div>
+                        <h4 className="font-medium text-sm text-muted-foreground">Manager Rating</h4>
+                        <div className="text-xl font-semibold">{userSubmission.scores.managerRating.toFixed(1)}/5.0</div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div className="text-center py-8">
+                  <p className="text-muted-foreground mb-4">You haven't submitted your self-appraisal yet.</p>
+                  
+                  {/* Self Appraisal Section */}
+                  <Card className="mt-6">
+                    <CardHeader>
+                      <CardTitle>Submit Your Self Appraisal</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <SelfAppraisalSection 
+                        currentUser={currentUser}
+                        onSubmit={(data) => {
+                          // Save the self-appraisal submission
+                          const submissions = getSubmissions();
+                          const { productivity, quality, communication, teamwork, initiative, reliability } = data;
+                          const selfRating = (productivity + quality + communication + teamwork + initiative + reliability) / 6;
+                          
+                          const newSubmission: AppraisalSubmission = {
+                            id: `sub_${Date.now()}`,
+                            employeeId: currentUser.id,
+                            employeeName: currentUser.name,
+                            department: currentUser.department,
+                            submissionDate: new Date().toISOString(),
+                            appraisalPeriod: data.reviewPeriod,
+                            status: "submitted",
+                            lineManager: currentUser.lineManager || "",
+                            selfAppraisal: data,
+                            scores: { selfRating }
+                          };
+                          
+                          saveSubmissions([...submissions, newSubmission]);
+                          setUserSubmission(newSubmission);
+                          
+                          toast({
+                            title: "Self Appraisal Submitted",
+                            description: "Your self-appraisal has been submitted for review",
+                          });
+                        }}
+                      />
+                    </CardContent>
+                  </Card>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    </div>
+  );
+};
