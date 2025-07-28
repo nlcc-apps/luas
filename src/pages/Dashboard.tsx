@@ -410,94 +410,106 @@ export const EmployeeDashboard = ({ currentUser, onLogout }: { currentUser: User
           </Button>
         </div>
 
-        {/* Dashboard Content */}
-        <div className="max-w-4xl mx-auto space-y-6">
-          {/* My Appraisal Status */}
-          <Card>
-            <CardHeader>
-              <CardTitle>My Appraisal Status</CardTitle>
-            </CardHeader>
-            <CardContent>
-              {userSubmission ? (
-                <div className="space-y-6">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div>
-                      <h3 className="font-semibold mb-2">Current Status</h3>
-                      {getEmployeeStatusDisplay(userSubmission.status)}
-                    </div>
-                    <div>
-                      <h3 className="font-semibold mb-2">Total Score</h3>
-                      <div className="text-3xl font-bold text-primary">
-                        {calculateTotalScore()}/5.0
+        {/* Main Content Tabs */}
+        <div className="max-w-4xl mx-auto">
+          <Tabs defaultValue="dashboard" className="space-y-6">
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger value="dashboard">EmployeeDashboard</TabsTrigger>
+              <TabsTrigger value="self-appraisal">Start Self Appraisal</TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="dashboard">
+              <Card>
+                <CardHeader>
+                  <CardTitle>My Appraisal Status</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  {userSubmission ? (
+                    <div className="space-y-6">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                          <h3 className="font-semibold mb-2">Current Status</h3>
+                          {getEmployeeStatusDisplay(userSubmission.status)}
+                        </div>
+                        <div>
+                          <h3 className="font-semibold mb-2">Total Score</h3>
+                          <div className="text-3xl font-bold text-primary">
+                            {calculateTotalScore()}/5.0
+                          </div>
+                          <p className="text-sm text-muted-foreground">
+                            {userSubmission.scores.managerRating 
+                              ? "Combined self and manager rating"
+                              : "Self rating (pending manager evaluation)"
+                            }
+                          </p>
+                        </div>
                       </div>
-                      <p className="text-sm text-muted-foreground">
-                        {userSubmission.scores.managerRating 
-                          ? "Combined self and manager rating"
-                          : "Self rating (pending manager evaluation)"
-                        }
+                      
+                      {userSubmission.scores.managerRating && (
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4 border-t">
+                          <div>
+                            <h4 className="font-medium text-sm text-muted-foreground">Self Rating</h4>
+                            <div className="text-xl font-semibold">{userSubmission.scores.selfRating.toFixed(1)}/5.0</div>
+                          </div>
+                          <div>
+                            <h4 className="font-medium text-sm text-muted-foreground">Manager Rating</h4>
+                            <div className="text-xl font-semibold">{userSubmission.scores.managerRating.toFixed(1)}/5.0</div>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <div className="text-center py-8">
+                      <p className="text-muted-foreground">You haven't submitted your self-appraisal yet.</p>
+                      <p className="text-sm text-muted-foreground mt-2">
+                        Switch to the "Start Self Appraisal" tab to submit your appraisal.
                       </p>
                     </div>
-                  </div>
-                  
-                  {userSubmission.scores.managerRating && (
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4 border-t">
-                      <div>
-                        <h4 className="font-medium text-sm text-muted-foreground">Self Rating</h4>
-                        <div className="text-xl font-semibold">{userSubmission.scores.selfRating.toFixed(1)}/5.0</div>
-                      </div>
-                      <div>
-                        <h4 className="font-medium text-sm text-muted-foreground">Manager Rating</h4>
-                        <div className="text-xl font-semibold">{userSubmission.scores.managerRating.toFixed(1)}/5.0</div>
-                      </div>
-                    </div>
                   )}
-                </div>
-              ) : (
-                <div className="text-center py-8">
-                  <p className="text-muted-foreground mb-4">You haven't submitted your self-appraisal yet.</p>
-                  
-                  {/* Self Appraisal Section */}
-                  <Card className="mt-6">
-                    <CardHeader>
-                      <CardTitle>Submit Your Self Appraisal</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <SelfAppraisalSection 
-                        currentUser={currentUser}
-                        onSubmit={(data) => {
-                          // Save the self-appraisal submission
-                          const submissions = getSubmissions();
-                          const { productivity, quality, communication, teamwork, initiative, reliability } = data;
-                          const selfRating = (productivity + quality + communication + teamwork + initiative + reliability) / 6;
-                          
-                          const newSubmission: AppraisalSubmission = {
-                            id: `sub_${Date.now()}`,
-                            employeeId: currentUser.id,
-                            employeeName: currentUser.name,
-                            department: currentUser.department,
-                            submissionDate: new Date().toISOString(),
-                            appraisalPeriod: data.reviewPeriod,
-                            status: "submitted",
-                            lineManager: currentUser.lineManager || "",
-                            selfAppraisal: data,
-                            scores: { selfRating }
-                          };
-                          
-                          saveSubmissions([...submissions, newSubmission]);
-                          setUserSubmission(newSubmission);
-                          
-                          toast({
-                            title: "Self Appraisal Submitted",
-                            description: "Your self-appraisal has been submitted for review",
-                          });
-                        }}
-                      />
-                    </CardContent>
-                  </Card>
-                </div>
-              )}
-            </CardContent>
-          </Card>
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            <TabsContent value="self-appraisal">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Submit Your Self Appraisal</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <SelfAppraisalSection 
+                    currentUser={currentUser}
+                    onSubmit={(data) => {
+                      // Save the self-appraisal submission
+                      const submissions = getSubmissions();
+                      const { productivity, quality, communication, teamwork, initiative, reliability } = data;
+                      const selfRating = (productivity + quality + communication + teamwork + initiative + reliability) / 6;
+                      
+                      const newSubmission: AppraisalSubmission = {
+                        id: `sub_${Date.now()}`,
+                        employeeId: currentUser.id,
+                        employeeName: currentUser.name,
+                        department: currentUser.department,
+                        submissionDate: new Date().toISOString(),
+                        appraisalPeriod: data.reviewPeriod,
+                        status: "submitted",
+                        lineManager: currentUser.lineManager || "",
+                        selfAppraisal: data,
+                        scores: { selfRating }
+                      };
+                      
+                      saveSubmissions([...submissions, newSubmission]);
+                      setUserSubmission(newSubmission);
+                      
+                      toast({
+                        title: "Self Appraisal Submitted",
+                        description: "Your self-appraisal has been submitted for review",
+                      });
+                    }}
+                  />
+                </CardContent>
+              </Card>
+            </TabsContent>
+          </Tabs>
         </div>
       </div>
     </div>
