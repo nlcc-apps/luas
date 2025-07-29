@@ -7,9 +7,11 @@ import { UserLogin } from "@/components/auth/UserLogin";
 import { SelfAppraisalSection } from "@/components/SelfAppraisalSection";
 import { Logo } from "@/components/ui/Logo";
 import { SubmissionPreview } from "@/components/admin/SubmissionPreview";
+import { StaffAppraisalResultComponent } from "@/components/AppraisalResult";
+import { calculateStaffAppraisal } from "@/lib/appraisalCalculator";
 import { User, initializeData, getSubmissionsForManager, getSubmissionsForCEO, AppraisalSubmission, getSubmissions, saveSubmissions } from "@/lib/userData";
 import { useToast } from "@/hooks/use-toast";
-import { LogOut, Bell, Users, FileText, Star, Eye, CheckCircle } from "lucide-react";
+import { LogOut, Bell, Users, FileText, Star, Eye, CheckCircle, Download } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 
 const Dashboard = () => {
@@ -344,6 +346,7 @@ export default Dashboard;
 // Employee Dashboard Component
 export const EmployeeDashboard = ({ currentUser, onLogout }: { currentUser: User, onLogout: () => void }) => {
   const [userSubmission, setUserSubmission] = useState<AppraisalSubmission | null>(null);
+  const [showReport, setShowReport] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -382,6 +385,16 @@ export const EmployeeDashboard = ({ currentUser, onLogout }: { currentUser: User
     }
     
     return selfScore.toFixed(1);
+  };
+
+  const handleGenerateReport = () => {
+    if (!userSubmission) return;
+    
+    setShowReport(true);
+    toast({
+      title: "Report Generated",
+      description: "Your submission report is ready for review",
+    });
   };
 
   return (
@@ -456,17 +469,28 @@ export const EmployeeDashboard = ({ currentUser, onLogout }: { currentUser: User
                             <div className="text-xl font-semibold">{userSubmission.scores.managerRating.toFixed(1)}/5.0</div>
                           </div>
                         </div>
-                      )}
-                    </div>
-                  ) : (
-                    <div className="text-center py-8">
-                      <p className="text-muted-foreground">You haven't submitted your self-appraisal yet.</p>
-                      <p className="text-sm text-muted-foreground mt-2">
-                        Switch to the "Start Self Appraisal" tab to submit your appraisal.
-                      </p>
-                    </div>
-                  )}
-                </CardContent>
+                       )}
+                       
+                       <div className="pt-6 border-t">
+                         <Button 
+                           onClick={handleGenerateReport}
+                           className="w-full flex items-center gap-2"
+                           disabled={!userSubmission}
+                         >
+                           <Download className="h-4 w-4" />
+                           Generate Submission Report
+                         </Button>
+                       </div>
+                     </div>
+                   ) : (
+                     <div className="text-center py-8">
+                       <p className="text-muted-foreground">You haven't submitted your self-appraisal yet.</p>
+                       <p className="text-sm text-muted-foreground mt-2">
+                         Switch to the "Start Self Appraisal" tab to submit your appraisal.
+                       </p>
+                     </div>
+                   )}
+                 </CardContent>
               </Card>
             </TabsContent>
 
@@ -512,6 +536,31 @@ export const EmployeeDashboard = ({ currentUser, onLogout }: { currentUser: User
           </Tabs>
         </div>
       </div>
+
+      {/* Submission Report Modal */}
+      {userSubmission && showReport && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+          <div className="bg-background rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="p-6">
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-2xl font-bold">Submission Report</h2>
+                <Button variant="ghost" onClick={() => setShowReport(false)}>
+                  ✕
+                </Button>
+              </div>
+              
+              {userSubmission.selfAppraisal && (
+                <StaffAppraisalResultComponent
+                  result={calculateStaffAppraisal(userSubmission.selfAppraisal)}
+                  employeeName={userSubmission.employeeName}
+                  position={currentUser.position}
+                  reviewPeriod={userSubmission.appraisalPeriod}
+                />
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
