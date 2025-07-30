@@ -9,7 +9,8 @@ import { Logo } from "@/components/ui/Logo";
 import { SubmissionPreview } from "@/components/admin/SubmissionPreview";
 import { StaffAppraisalResultComponent } from "@/components/AppraisalResult";
 import { calculateStaffAppraisal } from "@/lib/appraisalCalculator";
-import { User, initializeData, getSubmissionsForManager, getSubmissionsForCEO, AppraisalSubmission, getSubmissions, saveSubmissions } from "@/lib/userData";
+//import { User, initializeData, getSubmissionsForManager, getSubmissionsForCEO, AppraisalSubmission, getSubmissions, saveSubmissions } from "@/lib/userData";
+import { User, getSubmissionsForManager, getSubmissionsForCEO, AppraisalSubmission, getSubmissions, saveSubmissions } from "@/lib/userData";
 import { useToast } from "@/hooks/use-toast";
 import { LogOut, Bell, Users, FileText, Star, Eye, CheckCircle, Download } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -21,23 +22,44 @@ const Dashboard = () => {
   const [showPreview, setShowPreview] = useState(false);
   const { toast } = useToast();
 
-  useEffect(() => {
-    initializeData();
-    const storedUser = localStorage.getItem("currentUser");
-    if (storedUser) {
-      const user = JSON.parse(storedUser);
-      setCurrentUser(user);
-      loadSubmissions(user);
-    }
-  }, []);
+//  useEffect(() => {
+//    initializeData();
+//    const storedUser = localStorage.getItem("currentUser");
+//    if (storedUser) {
+//      const user = JSON.parse(storedUser);
+//      setCurrentUser(user);
+//      loadSubmissions(user);
+//    }
+//  }, []);
 
-  const loadSubmissions = (user: User) => {
-    if (user.role === "manager") {
-      setSubmissions(getSubmissionsForManager(user.id));
-    } else if (user.role === "ceo") {
-      setSubmissions(getSubmissionsForCEO());
-    }
-  };
+  useEffect(() => {
+  const storedUser = localStorage.getItem("currentUser");
+  if (storedUser) {
+    const user = JSON.parse(storedUser);
+    setCurrentUser(user);
+    loadSubmissions(user); // No need to await here inside useEffect
+  }
+}, []);
+
+
+//  const loadSubmissions = (user: User) => {
+//    if (user.role === "manager") {
+//    setSubmissions(getSubmissionsForManager(user.id));
+//    } else if (user.role === "ceo") {
+//      setSubmissions(getSubmissionsForCEO());
+//    }
+//  };
+
+const loadSubmissions = async (user: User) => {
+  if (user.role === "manager") {
+    const data = await getSubmissionsForManager(user.id);
+    setSubmissions(data);
+  } else if (user.role === "ceo") {
+    const data = await getSubmissionsForCEO();
+    setSubmissions(data);
+  }
+};
+
 
   const handleLogin = (user: User) => {
     setCurrentUser(user);
@@ -295,9 +317,9 @@ const Dashboard = () => {
                   <CardContent>
                     <SelfAppraisalSection 
                       currentUser={currentUser}
-                      onSubmit={(data) => {
+                      onSubmit={async (data) => {
                         // Save the self-appraisal submission
-                        const submissions = getSubmissions();
+                        const submissions = await getSubmissions();
                         const { productivity, quality, communication, teamwork, initiative, reliability } = data;
                         const selfRating = (productivity + quality + communication + teamwork + initiative + reliability) / 6;
                         
@@ -310,7 +332,7 @@ const Dashboard = () => {
                           appraisalPeriod: data.reviewPeriod,
                           status: "submitted",
                           lineManager: currentUser!.lineManager || "",
-                          selfAppraisal: data,
+                          selfAppraisal: JSON.stringify(data),
                           scores: { selfRating }
                         };
                         
@@ -349,12 +371,25 @@ export const EmployeeDashboard = ({ currentUser, onLogout }: { currentUser: User
   const [showReport, setShowReport] = useState(false);
   const { toast } = useToast();
 
-  useEffect(() => {
+//  useEffect(() => {
     // Load the employee's own submission
-    const submissions = getSubmissions();
+//    const submissions = getSubmissions();
+//    const mySubmission = submissions.find(s => s.employeeId === currentUser.id);
+//    setUserSubmission(mySubmission);
+//  }, [currentUser.id]);
+
+  useEffect(() => {
+  const loadUserSubmission = async () => {
+    const submissions = await getSubmissions(); // ✅ Await the async function
     const mySubmission = submissions.find(s => s.employeeId === currentUser.id);
     setUserSubmission(mySubmission);
-  }, [currentUser.id]);
+  };
+
+  if (currentUser?.id) {
+    loadUserSubmission(); // ✅ Call the inner async function
+  }
+}, [currentUser.id]);
+
 
   const getEmployeeStatusDisplay = (status: AppraisalSubmission["status"]) => {
     const statusConfig = {
@@ -502,9 +537,9 @@ export const EmployeeDashboard = ({ currentUser, onLogout }: { currentUser: User
                 <CardContent>
                   <SelfAppraisalSection 
                     currentUser={currentUser}
-                    onSubmit={(data) => {
+                    onSubmit={async (data) => {
                       // Save the self-appraisal submission
-                      const submissions = getSubmissions();
+                      const submissions = await getSubmissions();
                       const { productivity, quality, communication, teamwork, initiative, reliability } = data;
                       const selfRating = (productivity + quality + communication + teamwork + initiative + reliability) / 6;
                       
@@ -517,7 +552,7 @@ export const EmployeeDashboard = ({ currentUser, onLogout }: { currentUser: User
                         appraisalPeriod: data.reviewPeriod,
                         status: "submitted",
                         lineManager: currentUser.lineManager || "",
-                        selfAppraisal: data,
+                        selfAppraisal: JSON.stringify(data),
                         scores: { selfRating }
                       };
                       
@@ -551,7 +586,7 @@ export const EmployeeDashboard = ({ currentUser, onLogout }: { currentUser: User
               
               {userSubmission.selfAppraisal && (
                 <StaffAppraisalResultComponent
-                  result={calculateStaffAppraisal(userSubmission.selfAppraisal)}
+                  result={calculateStaffAppraisal(JSON.parse(userSubmission.selfAppraisal))}
                   employeeName={userSubmission.employeeName}
                   position={currentUser.position}
                   reviewPeriod={userSubmission.appraisalPeriod}

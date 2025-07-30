@@ -25,7 +25,7 @@ export const UserLogin = ({ onLogin }: UserLoginProps) => {
     setError("");
 
     try {
-      const user = authenticateUser(email, password);
+      const user = await authenticateUser(email, password);
       if (user) {
         onLogin(user);
       } else {
